@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gartic Perfil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            overflow-y: auto;
+            background-color: #f0f0f5;
+        }
+
+        .cont-centro {
+            padding: 30px;
+            margin-top: 20px;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 250px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .avatar {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .avatar img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #007bff;
+        }
+
+        .avatar-status {
+            margin-top: 10px;
+            font-weight: 400;
+            color: #555;
+        }
+
+        .balaoMsg {
+            position: relative;
+            background-color: #e1f5fe;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            font-size: 18px;
+            color: #333;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .balaoMsg::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px;
+            border-style: solid;
+            border-color: #e1f5fe transparent transparent transparent;
+        }
+
+        .dados-user {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .dados-user div {
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .nick {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .color-buttons {
+            margin-top: 20px;
+        }
+
+        .color-buttons button {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="cont-centro">
+    <input type="text" id="inputNick" placeholder="Digite o nick do jogador">
+    <button onclick="buscarJogador()">Buscar</button>
+
+    <div class="avatar hidden" id="avatarContainer">
+        <div class="nick" id="nick">Nome</div>
+        <img id="avatarImg" src="" alt="Avatar">
+        <div class="avatar-status" id="avatarStatus">Normal</div>
+        <button onclick="trocarAvatar()">Trocar Avatar</button>
+    </div>
+
+    <div class="balaoMsg hidden" id="frase"></div>
+
+    <div class="dados-user hidden" id="dadosUser">
+        <div>Pontos: <span id="pontos">0</span></div>
+        <div>Vitórias: <span id="vitorias">0</span></div>
+    </div>
+</div>
+
+<script>
+    let pendente = false;
+
+    function buscarJogador() {
+        const nick = document.getElementById('inputNick').value.trim();
+        if (!nick) return alert('Por favor, insira um nick.');
+
+        fetch(`https://gartic.pics/r/profile?&login=${nick}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Jogador não encontrado.');
+                return response.json();
+            })
+            .then(data => {
+                let fraseCorrigida = data.frase
+                    .replace(/&atilde;/g, 'ã')
+                    .replace(/&ccedil;/g, 'ç')
+                    .replace(/&eacute;/g, 'é');
+
+                document.getElementById('nick').innerText = nick;
+                document.getElementById('frase').innerText = fraseCorrigida;
+                document.getElementById('vitorias').innerText = data.vitorias;
+                document.getElementById('pontos').innerText = data.pontos;
+
+                carregarAvatar(nick);
+
+                document.getElementById('avatarContainer').classList.remove('hidden');
+                document.getElementById('frase').classList.remove('hidden');
+                document.getElementById('dadosUser').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Erro ao buscar jogador:', error);
+                alert('Erro ao buscar jogador ou jogador não encontrado.');
+            });
+    }
+
+    function carregarAvatar(nick) {
+        let avatarLink = `https://www.gartik.com/avatar.php?nick=${nick}&app=1&rand=c4747_18`;
+        if (pendente) {
+            avatarLink += '&pendente=1';
+        }
+        document.getElementById('avatarImg').src = avatarLink;
+        document.getElementById('avatarStatus').innerText = pendente ? 'Pendente' : 'Normal';
+    }
+
+    function trocarAvatar() {
+        pendente = !pendente;
+        const nick = document.getElementById('inputNick').value.trim();
+        if (nick) {
+            carregarAvatar(nick);
+        }
+    }
+</script>
+
+</body>
+</html>
